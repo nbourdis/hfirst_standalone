@@ -5,7 +5,7 @@
 % 61.34% (soft classifier) 
 % 76.40% (hard classifier)
 % as described in the paper:
-% Orchard, G.; Cohen, G.; Jayawant, A.; and Thakor, N.  “Converting Static Image Datasets to Spiking Neuromorphic Datasets Using Saccades", Frontiers in Neuroscience, vol.9, no.437, Oct. 2015
+% Orchard, G.; Cohen, G.; Jayawant, A.; and Thakor, N.  ï¿½Converting Static Image Datasets to Spiking Neuromorphic Datasets Using Saccades", Frontiers in Neuroscience, vol.9, no.437, Oct. 2015
 % Accuracy is slightly higher than reported in the paper due to minor
 % changes in preprocessing
 %  
@@ -44,23 +44,26 @@
 %% Define where inputs are located and outputs are to be saved
 %define where the matlab AER functions are kept. They can be downloaded
 %from: http://www.garrickorchard.com/code/matlab-AER-functions
-matlab_AER_functions_location = '..\Matlab_AER_vision_functions';
+matlab_AER_functions_location = strcat(pwd,'/Matlab_AER_vision_functions');
 
 %define where the NMIST dataset functions are kept (for reading and
 %stabilizing). They can be downloaded with the NMIST dataset at http://www.garrickorchard.com/datasets/n-mnist
-NMNIST_functions_location = '..\N-MINST';
+% NMNIST_functions_location = strcat(pwd,'/N-MNIST');
+NMNIST_functions_location = strcat(pwd,'/NCars');
 
 % training_directory = 'Training'; % the root directory for the training data
-training_directory = '..\..\Work\SaccadeVision\MNIST\N-MNIST\Train';
+% training_directory = strcat(pwd,'/N-MNIST/Train');
+training_directory = strcat(pwd,'/NCars/train');
 
 % testing_directory = 'Testing'; % the root directory for the testing data
-testing_directory = '..\..\Work\SaccadeVision\MNIST\N-MNIST\Test'; % the root directory for the testing data
+% testing_directory = strcat(pwd,'/N-MNIST/Test');
+testing_directory = strcat(pwd,'/NCars/test');
 
-working_directory = 'Working'; % a directory where intermediate results can be stored. This is useful in cases where the script is interrupted
+working_directory = strcat(pwd,'/Working'); % a directory where intermediate results can be stored. This is useful in cases where the script is interrupted
 
-S2_filters_filename = 'S2_filters_file'; % the name of a file where the S2 filters will be stored
+S2_filters_filename = strcat(pwd,'/S2_filters_file'); % the name of a file where the S2 filters will be stored
 
-results_filename = 'accuracy_output'; % a file where the resulting accuracy on the test set will be saved
+results_filename = strcat(pwd,'/accuracy_output'); % a file where the resulting accuracy on the test set will be saved
 
 %% add functions to the path
 addpath(genpath(matlab_AER_functions_location));
@@ -80,26 +83,26 @@ tic
 for class_number = 1:length(training_classes) %loop through each class
     fprintf('Extracting C1 spikes for class label %i \n', class_number);
     %create a list of the filenames for this class
-    filenames = dir([training_directory, '\', training_classes(class_number).name]);
+    filenames = dir([training_directory, '/', training_classes(class_number).name]);
     filenames(1:2) = [];
     
-    if ~exist(([working_directory, '\',training_classes(class_number).name]), 'dir')
-        mkdir([working_directory, '\',training_classes(class_number).name]); % create a folder to save the results
+    if ~exist(([working_directory, '/',training_classes(class_number).name]), 'dir')
+        mkdir([working_directory, '/',training_classes(class_number).name]); % create a folder to save the results
     end
     
     for filenumber = 1:length(filenames) %for each training example
         
         %load the file containing 'TD'
-        TD = Read_Ndataset([training_directory, '\', training_classes(class_number).name, '\', filenames(filenumber).name]);
+        TD = Read_Ndataset([training_directory, '/', training_classes(class_number).name, '/', filenames(filenumber).name]);
+        TD = stabilize(TD); %optionally stabilize the image
         TD = FilterTD(TD, 10e3); %apply some noise filtering
-        %         TD = stabilize(TD); %optionally stabilize the image
         %         TD = ImplementRefraction(TD, 5e3); %optionally set a refraction time for each pixel
         
         %Run HFIRST in training mode (flag 1)
         [S1out, C1out, ~, ~] = HFIRST(TD, '', 1);
         
         %save the C1 result
-        save([working_directory, '\',training_classes(class_number).name, '\', filenames(filenumber).name(1:end-4)], 'C1out');
+        save([working_directory, '/',training_classes(class_number).name, '/', filenames(filenumber).name(1:end-4)], 'C1out');
         
         %some printing to show that progress is being made
         fprintf('.');
@@ -125,14 +128,14 @@ S2_Filter_temp = zeros(1,1,1,length(training_classes));
 for class_number = 1:length(training_classes) %loop through each class
     
     %create a list of the filenames for this class
-    filenames = dir([working_directory, '\', training_classes(class_number).name]);
+    filenames = dir([working_directory, '/', training_classes(class_number).name]);
     filenames(1:2) = [];
     
     
     for filenumber = 1:length(filenames)
         
         %load the C1 result
-        load([working_directory, '\', training_classes(class_number).name, '\', filenames(filenumber).name])
+        load([working_directory, '/', training_classes(class_number).name, '/', filenames(filenumber).name])
         
         max_x = max(C1out.x);
         max_y = max(C1out.y);
@@ -164,7 +167,7 @@ for class_number = 1:length(testing_classes) % loop through each class
     fprintf('Extracting HFIRST results for class label %i \n', class_number);
     
     %within each class, find the filenames of all the examples
-    filenames = dir([testing_directory, '\', testing_classes(class_number).name]);
+    filenames = dir([testing_directory, '/', testing_classes(class_number).name]);
     filenames(1:2) = [];
     
     %set the number of test samples to use
@@ -176,8 +179,8 @@ for class_number = 1:length(testing_classes) % loop through each class
     for filenumber = 1:length(filenames)
         
         %load the file
-        %         load([testing_directory, '\', testing_classes(class_number).name, '\' filenames(filenumber).name])
-        TD = Read_Ndataset([testing_directory, '\', testing_classes(class_number).name, '\' filenames(filenumber).name]);
+        %         load([testing_directory, '/', testing_classes(class_number).name, '/' filenames(filenumber).name])
+        TD = Read_Ndataset([testing_directory, '/', testing_classes(class_number).name, '/' filenames(filenumber).name]);
         TD = FilterTD(TD, 10e3);
         %         TD = stabilize(TD);
         %         TD = ImplementRefraction(TD, 5e3);
