@@ -1,4 +1,4 @@
-function [S1out, C1out, S2out, C2out] = HFIRST(TD, S2_path, training)
+function [S1out, C1out, S2out, C2out] = HFIRST(TD, S2_path, training, image_size)
 % HFIRST is described in the paper:
 % Orchard, G.; Meyer, C.; Etienne-Cummings, R.; Posch, C.; Thakor, N.; and Benosman, R., "HFIRST: A Temporal Approach to Object Recognition," Pattern Analysis and Machine Intelligence, IEEE Transactions on vol.37, no.10, pp.2028-2040, Oct. 2015
 % 
@@ -31,6 +31,9 @@ function [S1out, C1out, S2out, C2out] = HFIRST(TD, S2_path, training)
 if ~exist('training', 'var')
     training = 0;
 end
+if ~exist('image_size', 'var')
+    image_size = [];
+end
 
 S1out = [];
 C1out = [];
@@ -57,8 +60,16 @@ S1_params.decay_rate        = 25; %mV per millisecond
 S1_params.refractory_period = 5; %milliseconds
 
 %run the S1 layer
-S1pos = S1(TDpos, gabor_weights, S1_params); %process the ON-events
-S1neg = S1(TDneg, gabor_weights, S1_params); %process the OFF-events
+if isempty(TDpos.ts)
+    S1pos = TDpos;
+else
+    S1pos = S1(TDpos, gabor_weights, S1_params, image_size); %process the ON-events
+end
+if isempty(TDneg.ts)
+    S1neg = TDneg;
+else
+    S1neg = S1(TDneg, gabor_weights, S1_params, image_size); %process the OFF-events
+end
 S1out = CombineStreams(S1pos, S1neg); %recombine the ON and OFF events
 % S1out = CombineStreams(S1neg, S1neg); %WRONG... but better
 

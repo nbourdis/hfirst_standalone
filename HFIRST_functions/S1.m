@@ -1,4 +1,4 @@
-function output_spikes = S1(TD, gabor_weight, S1_params)
+function output_spikes = S1(TD, gabor_weight, S1_params, image_size)
 %% output_spikes = S1(TD, gabor_weight, S1_params)
 % Calculates the spiking S1 layer response to the Temporal Difference data
 % "TD"
@@ -48,7 +48,9 @@ TD.ts               = int32(TD.ts./1e3);
 [filter_x_index, filter_y_index] = meshgrid(filter_size_x:-1:1,filter_size_y:-1:1);
 
 %% initialize SNN state variables/holders
-image_size = [max(TD.y), max(TD.x)];
+if isempty(image_size)
+    image_size = [max(TD.y), max(TD.x)];
+end
 number_of_events = length(TD.ts);
 neuron_potential = int32(zeros([image_size, num_orientations])); % an array to hold the neuron_potentials
 update_time = int32(zeros(image_size)); % an array to record when last each neuron was updated

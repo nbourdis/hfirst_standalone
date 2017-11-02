@@ -65,6 +65,10 @@ S2_filters_filename = strcat(pwd,'/S2_filters_file'); % the name of a file where
 
 results_filename = strcat(pwd,'/accuracy_output'); % a file where the resulting accuracy on the test set will be saved
 
+image_size = [100, 120]
+
+
+
 %% add functions to the path
 addpath(genpath(matlab_AER_functions_location));
 addpath(genpath(NMNIST_functions_location));
@@ -99,7 +103,7 @@ for class_number = 1:length(training_classes) %loop through each class
         %         TD = ImplementRefraction(TD, 5e3); %optionally set a refraction time for each pixel
         
         %Run HFIRST in training mode (flag 1)
-        [S1out, C1out, ~, ~] = HFIRST(TD, '', 1);
+        [S1out, C1out, ~, ~] = HFIRST(TD, '', 1, image_size);
         
         %save the C1 result
         save([working_directory, '/',training_classes(class_number).name, '/', filenames(filenumber).name(1:end-4)], 'C1out');
@@ -186,7 +190,7 @@ for class_number = 1:length(testing_classes) % loop through each class
         %         TD = ImplementRefraction(TD, 5e3);
         
         %run HFIRST
-        [S1out, C1out, S2out, C2out] = HFIRST(TD, S2_filters_filename, 0); %we only care about C2 during testing
+        [S1out, C1out, S2out, C2out] = HFIRST(TD, S2_filters_filename, 0, image_size); %we only care about C2 during testing
         
         %calculate the accuracy
         if ~isempty(C2out.p)
